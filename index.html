@@ -1,1 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item List with Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            margin: 10px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-group button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+        }
+
+        .form-group button:hover {
+            background-color: #218838;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            background-color: #f9f9f9;
+            padding: 10px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-buttons button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .edit-button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .edit-button:hover {
+            background-color: #0056b3;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+        @media (min-width: 600px) {
+            .form-group {
+                flex-direction: row;
+            }
+
+            .form-group input {
+                margin-bottom: 0;
+                margin-right: 10px;
+                width: calc(50% - 5px);
+            }
+
+            .form-group button {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            RUNBEE ELECTRICAL AND ELECTRONICS SHOP
+        </div>
+        <h1>Item List</h1>
+        <div class="form-group">
+            <input type="text" id="itemName" placeholder="Item Name">
+            <input type="number" id="itemPrice" placeholder="Item Price">
+            <button onclick="requestPasswordForAdding()">Add</button>
+        </div>
+        <input type="text" id="searchBar" class="search-bar" placeholder="Search items..." onkeyup="searchItem()">
+        <ul id="itemList"></ul>
+    </div>
+
+    <script>
+        const PASSWORD = "Runbee@20";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadItems();
+        });
+
+        function requestPasswordForAdding() {
+            const inputPassword = prompt("Enter password to add item:");
+            if (inputPassword === PASSWORD) {
+                addItem();
+            } else {
+                alert('Incorrect password');
+            }
+        }
+
+        function addItem() {
+            const itemName = document.getElementById('itemName').value;
+            const itemPrice = document.getElementById('itemPrice').value;
+
+            if (itemName && itemPrice) {
+                const ul = document.getElementById('itemList');
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="item-info">${itemName} - Ksh. ${itemPrice}</span>
+                    <div class="action-buttons">
+                        <button class="edit-button" onclick="requestPassword('edit', this)">Edit</button>
+                        <button class="delete-button" onclick="requestPassword('delete', this)">Delete</button>
+                    </div>
+                `;
+                ul.appendChild(li);
+
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+
+                saveItems();
+            } else {
+                alert('Please enter both item name and price');
+            }
+        }
+
+        function requestPassword(action, button) {
+            const inputPassword = prompt("Enter password to " + action + " item:");
+            if (inputPassword === PASSWORD) {
+                if (action === 'edit') {
+                    editItem(button);
+                } else if (action === 'delete') {
+                    deleteItem(button);
+                }
+            } else {
+                alert('Incorrect password');
+            }
+        }
+
+        function deleteItem(button) {
+            const li = button.parentElement.parentElement;
+            li.remove();
+            saveItems();
+        }
+
+        function editItem(button) {
+            const li = button.parentElement.parentElement;
+            const itemInfo = li.querySelector('.item-info').innerText;
+            const [itemName, itemPrice] = itemInfo.split(' - Ksh. ');
+
+            document.getElementById('itemName').value = itemName;
+            document.getElementById('itemPrice').value = itemPrice;
+
+            li.remove();
+            saveItems();
+        }
+
+        function searchItem() {
+            const searchBar = document.getElementById('searchBar').value.toLowerCase();
+            const items = document.querySelectorAll('#itemList li');
+
+            items.forEach(item => {
+                const text = item.querySelector('.item-info').textContent.toLowerCase();
+                if (text.includes(searchBar)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function saveItems() {
+            const items = [];
+            document.querySelectorAll('#itemList li').forEach(li => {
+                const itemInfo = li.querySelector('.item-info').innerText;
+                items.push(itemInfo);
+            });
+            localStorage.setItem('items', JSON.stringify(items));
+        }
+
+        function loadItems() {
+            const items = JSON.parse(localStorage.getItem('items'));
+            if (items) {
+                const ul = document.getElementById('itemList');
+                items.forEach(itemInfo => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span class="item-info">${itemInfo}</span>
+                        <div class="action-buttons">
+                            <button class="edit-button" onclick="requestPassword('edit', this)">Edit</button>
+                            <button class="delete-button" onclick="requestPassword('delete', this)">Delete</button>
+                        </div>
+                    `;
+                    ul.appendChild(li);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
 
